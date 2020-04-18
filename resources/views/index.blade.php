@@ -1,0 +1,236 @@
+@extends('layouts.app')
+
+@section('content')
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 mb-3">
+            <div class="card mt-5">
+                <div class="card-header">Créer une publication</div>
+
+                <div class="card-body">
+                <form method="post" action="{{route('posts.create')}}">
+                  <div class="row m-auto col-12">
+                    <div class="">
+                        <img src="img/avatar.png" class="ml-1" style="width: 40PX"/>
+                    </div>
+                  
+
+                    <div class="ml-2 col-11">
+                      
+                    <input type="text" data-emoji-picker="true" class="form-control inputpost" placeholder="Que voulez-vous dire, {{ Auth::user()->name }} ?" name="post" />
+                    </div>
+    
+                  </div>
+                  {{csrf_field()}}
+                  <button type="summit" class="btn col-11 text-white mt-3 color">Publier</button>
+                  </form>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+  
+</div>
+<div class="container ">
+    @if (session('alertcreate'))
+          <div class="alert alert-success m-auto h-100 col-md-8 justify-content-center">
+                {{ session('alertcreate') }}
+          </div>
+    @endif
+</div>
+<div class="container ">
+    @if (session('alertcreatereply'))
+          <div class="alert alert-success m-auto h-100 col-md-8 justify-content-center">
+                {{ session('alertcreatereply') }}
+          </div>
+    @endif
+</div>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 mb-3">
+        @foreach ( $user->posts()->get() as $post  )
+            <div class="card mt-5">
+                <div class="card-header bg-white">
+
+                  <div class="row m-auto">
+                    <div class="col-1">
+                        <img src="img/{{$post->user->avatar}}" class="ml-1" style="width: 40PX; border-radius: 10px 100px / 120px;"/>
+                    </div>
+                   
+                
+                    <div class="ml-2 col-11 row ">
+
+                    <a href="/{{$post->user->name}}" class=""><h5>{{$post->user->name}}</h5> </a> <p class="ml-2 ">- {{$post->created_at->diffForHumans()}}</p>
+                   
+                     @if($post->UserLikedPost())
+                         <a href="{{ url('/remove-like/' . $post->post) }}" class="ml-5"><i class='fas fa-thumbs-up' style='font-size:20px'></i></a>
+                         <p class="mt-1 ml-1 text-primary"> {{$post->likes()->where('post_id',  $post->id)->count()}}</p>
+                        
+                    @else
+                         <a href="{{ url('/like/' .  $post->post ) }}" class="ml-5"><i class='far fa-thumbs-up' style='font-size:20px'></i></a>
+                         <p class="mt-1 ml-1 text-primary"> {{$post->likes()->where('post_id',  $post->id)->count()}}</p>
+
+                    @endif
+                    <div class="" style="">
+                    <button type="button" class="btn text-white mt-2 ml-5"  style="opacity: 0.90" data-toggle="modal" data-target="#modaldelete{{ $post->id }}">
+                             <i class="material-icons ml-5" style="font-size:36px; color: #660A11; ">delete_forever</i>
+                         </button>
+                        <div class="modal fade " id="modaldelete{{ $post->id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                            <div class="modal-dialog " role="document">
+                            <div class="modal-content">
+                                    <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLabel">Supression alerte ?</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                    </div>
+                                    <div class="modal-body">
+                                    <h6>Etês vous sur de vouloir supprimer votre publication : " {{$post->post}} " ?</h6>
+
+                                    </div>
+                                    <div class="modal-footer">
+                                    
+                                        <form action="delete/{{ $post->id }}" method="POST">
+                                        {{ csrf_field() }}
+
+                                        <button class="btn text-white"   style="opacity: 0.90;background-color: #660A11">Oui</button>
+                                    
+                                        </form>
+                                    </div>
+                                </div>     
+                            </div>  
+                            </div>
+                            </div>
+                  
+                    </div>
+
+                         
+                  </div>
+               
+                </div>
+
+                <div class="card-body" style="background-color: rgba(0,0,0,.03);">
+
+                <p>{{$post->post}}</p>
+               
+
+                        <div class="row float-right mr-5 col-10">
+                        @foreach ( $post->reply()->get() as $replypost  )
+                            <div class="col-1">
+                                <img src="img/{{$replypost->user->avatar}}" class="ml-1" style="width: 40PX; border-radius: 10px 100px / 120px;"/>
+                            </div>
+
+                                <div class="ml-2 col-10  ">
+
+                                <a href="/{{$replypost->user->name}}" class=""><h5>{{$replypost->user->name}}</h5> </a> 
+                            
+                                <p class="mb-3">{{$replypost->reply}}</p>
+                                <p class=""> {{$replypost->created_at->diffForHumans()}}</p>
+                                </div>
+                                @endforeach
+                         
+                        </div>
+                      
+                <form method="post" action="{{route('replys.create')}}">
+                <input type="hidden" class="form-control" name="post_id" value="{{$post->id}}" placeholder="" aria-label="" aria-describedby="basic-addon1">
+                <input type="hidden" class="form-control" name="user_id" value="{{Auth::user()->id}}" placeholder="test" aria-label="" aria-describedby="basic-addon1">
+                     
+                <div class="input-group col-10 mt-4 float-right">
+                <input type="text" class="form-control" name="reply" placeholder="" aria-label="" aria-describedby="basic-addon1">
+                        <div class="input-group-append">
+                        {{csrf_field()}}
+                            <button class="btn btn-primary" type="summit">Reply</button>
+                        </div>
+                </div>
+                 </form>
+                  
+                   
+               
+                </div>
+                
+            </div>
+            @endforeach
+
+            @foreach ( $user->timeline() as $post  )
+            <div class="card mt-5">
+                <div class="card-header bg-white">
+
+               
+                  <div class="row m-auto">
+                    <div class="col-1">
+                        <img src="img/{{$post->user->avatar}}" class="ml-1" style="width: 40PX; border-radius: 10px 100px / 120px;"/>
+                    </div>
+
+                    <div class="ml-2 col-10 row ">
+
+                    <a href="/{{$post->user->name}}" class=""><h5>{{$post->user->name}}</h5> </a> <p class="ml-2 ">- {{$post->created_at->diffForHumans()}}</p>
+                   
+                     @if($post->UserLikedPost())
+                         <a href="{{ url('/remove-like/' . $post->post) }}" class="ml-5"><i class='fas fa-thumbs-up' style='font-size:20px'></i></a>
+                         <p class="mt-1 ml-1 text-primary"> {{$post->likes()->where('post_id',  $post->id)->count()}}</p>
+                        
+                    @else
+                         <a href="{{ url('/like/' .  $post->post ) }}" class="ml-5"><i class='far fa-thumbs-up' style='font-size:20px'></i></a>
+                         <p class="mt-1 ml-1 text-primary"> {{$post->likes()->where('post_id',  $post->id)->count()}}</p>
+
+                    @endif
+                  
+                    </div>
+
+                         
+                  </div>
+               
+
+
+                </div>
+
+                <div class="card-body" style="background-color: rgba(0,0,0,.03);">
+
+                <p>{{$post->post}}</p>
+                 
+                <div class="row float-right mr-5 col-10">
+                        @foreach ( $post->reply()->get() as $replypost  )
+                            <div class="col-1">
+                                <img src="img/{{$replypost->user->avatar}}" class="ml-1" style="width: 40PX; border-radius: 10px 100px / 120px;"/>
+                            </div>
+
+                                <div class="ml-2 col-10  ">
+
+                                <a href="/{{$replypost->user->name}}" class=""><h5>{{$replypost->user->name}}</h5> </a> 
+                            
+                                <p class="mb-3">{{$replypost->reply}}</p>
+                                <p class=""> {{$replypost->created_at->diffForHumans()}}</p>
+                                </div>
+                                @endforeach
+                         
+                        </div>
+                      
+
+              
+
+                <form method="post" action="{{route('replys.create')}}">
+                <input type="hidden" class="form-control" name="post_id" value="{{$post->id}}" placeholder="" aria-label="" aria-describedby="basic-addon1">
+                <input type="hidden" class="form-control" name="user_id" value="{{Auth::user()->id}}" placeholder="test" aria-label="" aria-describedby="basic-addon1">
+                <div class="input-group col-10 mt-4 float-right">
+                        
+                        <input type="text" class="form-control" name="reply" placeholder="" aria-label="" aria-describedby="basic-addon1">
+                        <div class="input-group-append">
+                        {{csrf_field()}}
+                            <button class="btn btn-primary" type="summit">Reply</button>
+                        </div>
+                </div>
+                 </form>
+                  
+                  
+                   
+               
+                </div>
+                
+            </div>
+            @endforeach
+        </div>
+    </div>
+  
+</div>
+@endsection
